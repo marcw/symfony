@@ -32,6 +32,7 @@ class HttpCache implements HttpKernelInterface
     protected $request;
     protected $esi;
     protected $esiTtls;
+    protected $esiMaxAges;
 
     /**
      * Constructor.
@@ -138,6 +139,7 @@ class HttpCache implements HttpKernelInterface
             $this->traces = array();
             $this->request = $request;
             $this->esiTtls = array();
+            $this->esiMaxAges = array();
         }
 
         $path = $request->getPathInfo();
@@ -163,7 +165,7 @@ class HttpCache implements HttpKernelInterface
         }
 
         if (null !== $this->esi) {
-            $this->addEsiTtl($response);
+            $this->addEsiCacheDatas($response);
 
             if ($request === $this->request) {
                 $this->updateResponseCacheControl($response);
@@ -178,9 +180,10 @@ class HttpCache implements HttpKernelInterface
      *
      * @param Response $response
      */
-    protected function addEsiTtl(Response $response)
+    protected function addEsiCacheDatas(Response $response)
     {
         $this->esiTtls[] = $response->isValidateable() ? -1 : $response->getTtl();
+        $this->esiMaxAges[] = $response->isValidateable() ? -1 : $response->getMaxAge();
     }
 
     /**
@@ -192,11 +195,13 @@ class HttpCache implements HttpKernelInterface
     protected function updateResponseCacheControl(Response $response)
     {
         $ttl = min($this->esiTtls);
+        $maxAge = min($this->esiMaxAges);
         if (-1 === $ttl) {
             $response->headers->set('Cache-Control', 'no-cache, must-revalidate');
         } else {
-            $response->setSharedMaxAge($ttl);
+            $response->setSharedMaxAge($maxAge);
             $response->setMaxAge(0);
+            $response->headers->set('Age', $maxAge - $ttl);
         }
     }
 
