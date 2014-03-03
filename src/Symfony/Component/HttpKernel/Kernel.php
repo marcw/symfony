@@ -74,7 +74,7 @@ abstract class Kernel implements KernelInterface, TerminableInterface
      *
      * @api
      */
-    public function __construct($environment, $debug)
+    final public function __construct($environment, $debug)
     {
         $this->environment = $environment;
         $this->debug = (Boolean) $debug;
