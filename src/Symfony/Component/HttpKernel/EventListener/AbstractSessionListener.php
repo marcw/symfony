@@ -124,6 +124,10 @@ abstract class AbstractSessionListener implements EventSubscriberInterface
                 ->setPrivate()
                 ->setMaxAge(0)
                 ->headers->addCacheControlDirective('must-revalidate');
+
+            if ($this->container->has('logger')) {
+                $this->container->get('logger')->debug(sprintf('The response HTTP Cache headers were automatically changed by the SessionListener. Please set the %s header if you wish to disable this behavior.', self::NO_AUTO_CACHE_CONTROL_HEADER));
+            }
         }
 
         if (!$event->getRequest()->attributes->get('_stateless', false)) {
